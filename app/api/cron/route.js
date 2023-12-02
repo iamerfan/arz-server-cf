@@ -17,11 +17,12 @@ export async function GET(req, res) {
       fetch(mobile).then((response) => response.json()),
     ]);
     await Promise.all([
-      kv.set("price", priceData),
-      kv.set("crypto", cryptoData),
-      kv.set("car", carData),
-      kv.set("mobile", mobileData),
+      priceData.status === 200 && kv.set("price", priceData),
+      cryptoData.status === 200 && kv.set("crypto", cryptoData),
+      carData.status === 200 && kv.set("car", carData),
+      mobileData.status === 200 && kv.set("mobile", mobileData),
     ]);
+
     const now = new Date();
     const year = now.getFullYear();
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
@@ -31,7 +32,9 @@ export async function GET(req, res) {
     const second = now.getSeconds().toString().padStart(2, "0");
     return new Response(
       JSON.stringify(
-        `cron jobs happened at: ${year}-${month}-${day} ${hour}:${minute}:${second}`
+        `cron jobs happened at: ${year}-${month}-${day} ${hour}:${minute}:${second} --
+         price: ${priceData.status},crypto: ${cryptoData.status},car: ${carData.status},mobile: ${mobileData.status},
+        `
       )
     );
   } catch (error) {
