@@ -2,7 +2,7 @@
 import { kv } from "@vercel/kv";
 export const runtime = "edge";
 
-export default async function GET(req, res) {
+export async function GET(req, res) {
   const { TOKEN } = process.env;
   const price = `https://one-api.ir/price/?token=${TOKEN}`;
   const crypto = `https://one-api.ir/DigitalCurrency/?token=${TOKEN}`;
@@ -29,13 +29,13 @@ export default async function GET(req, res) {
     const hour = now.getHours().toString().padStart(2, "0");
     const minute = now.getMinutes().toString().padStart(2, "0");
     const second = now.getSeconds().toString().padStart(2, "0");
-    Response(
+    return new Response(
       JSON.stringify(
         `cron jobs happened at: ${year}-${month}-${day} ${hour}:${minute}:${second}`
       )
     );
   } catch (error) {
-    Response(
+    return new Response(
       JSON.stringify({
         error: `An error occurred while fetching data from Vercel KV , ${error}`,
       })
