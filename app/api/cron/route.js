@@ -11,10 +11,10 @@ export async function GET(req, res) {
 
   try {
     const [priceData, cryptoData, carData, mobileData] = await Promise.all([
-      fetch(price).then((response) => response.json()),
-      fetch(crypto).then((response) => response.json()),
-      fetch(car).then((response) => response.json()),
-      fetch(mobile).then((response) => response.json()),
+      fetch(price, { cache: "no-store" }).then((response) => response.json()),
+      fetch(crypto, { cache: "no-store" }).then((response) => response.json()),
+      fetch(car, { cache: "no-store" }).then((response) => response.json()),
+      fetch(mobile, { cache: "no-store" }).then((response) => response.json()),
     ]);
     await Promise.all([
       priceData.status === 200 && kv.set("price", priceData),
