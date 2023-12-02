@@ -1,5 +1,6 @@
 // This is a Next.js Edge API route
 import { kv } from "@vercel/kv";
+import axios from "axios";
 export const runtime = "edge";
 
 export async function GET(req, res) {
@@ -8,35 +9,28 @@ export async function GET(req, res) {
   const crypto = `https://one-api.ir/DigitalCurrency/?token=${TOKEN}`;
   const car = `https://one-api.ir/car/?token=${TOKEN}&action=divar`;
   const mobile = `https://one-api.ir/mobile/?token=${TOKEN}&action=all`;
+  const date = new Date().toLocaleString("fa-IR");
 
   try {
-    const [priceData, cryptoData, carData, mobileData] = await Promise.all([
-      fetch(price, { cache: "no-store" }).then((response) => response.json()),
-      fetch(crypto, { cache: "no-store" }).then((response) => response.json()),
-      fetch(car, { cache: "no-store" }).then((response) => response.json()),
-      fetch(mobile, { cache: "no-store" }).then((response) => response.json()),
-    ]);
-    await Promise.all([
-      priceData.status === 200 && kv.set("price", priceData),
-      cryptoData.status === 200 && kv.set("crypto", cryptoData),
-      carData.status === 200 && kv.set("car", carData),
-      mobileData.status === 200 && kv.set("mobile", mobileData),
-    ]);
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const day = now.getDate().toString().padStart(2, "0");
-    const hour = now.getHours().toString().padStart(2, "0");
-    const minute = now.getMinutes().toString().padStart(2, "0");
-    const second = now.getSeconds().toString().padStart(2, "0");
-    return new Response(
-      JSON.stringify(
-        `cron jobs happened at: ${year}-${month}-${day} ${hour}:${minute}:${second} --
-         price: ${priceData.status},crypto: ${cryptoData.status},car: ${carData.status},mobile: ${mobileData.status},
-        `
-      )
+    const priceData = await fetch(price, { cache: "no-store" }).then(
+      (response) => response.json()
     );
+    const cryptoData = await fetch(crypto, { cache: "no-store" }).then(
+      (response) => response.json()
+    );
+    const carData = await fetch(car, { cache: "no-store" }).then((response) =>
+      response.json()
+    );
+    const mobileData = await fetch(mobile, { cache: "no-store" }).then(
+      (response) => response.json()
+    );
+
+    const kvPrice = await kv.set("price", { ...priceData, date });
+    const kvCypto = await kv.set("crypto", { ...cryptoData, date });
+    const kvCar = await kv.set("car", { ...carData, date });
+    const kvMoblie = await kv.set("mobile", { ...mobileData, date });
+
+    return new Response(JSON.stringify({ kvPrice, kvCypto, kvCar, kvMoblie }));
   } catch (error) {
     return new Response(
       JSON.stringify({
