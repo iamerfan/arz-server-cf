@@ -1,7 +1,6 @@
 // This is a Next.js Edge API route
 import { kv } from "@vercel/kv";
 export const runtime = "edge";
-
 export async function GET() {
   try {
     const [priceData, cryptoData, carData, mobileData] = await Promise.all([

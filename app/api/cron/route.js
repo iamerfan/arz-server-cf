@@ -5,32 +5,28 @@ export const runtime = "edge";
 
 export async function GET(req, res) {
   const { TOKEN } = process.env;
-  const price = `https://one-api.ir/price/?token=${TOKEN}`;
-  const crypto = `https://one-api.ir/DigitalCurrency/?token=${TOKEN}`;
-  const car = `https://one-api.ir/car/?token=${TOKEN}&action=divar`;
-  const mobile = `https://one-api.ir/mobile/?token=${TOKEN}&action=all`;
+  const urls = {
+    car: `https://one-api.ir/car/?token=${TOKEN}&action=divar`,
+    mobile: `https://one-api.ir/mobile/?token=${TOKEN}&action=all`,
+    price: `https://one-api.ir/price/?token=${TOKEN}`,
+    crypto: `https://one-api.ir/DigitalCurrency/?token=${TOKEN}`,
+  };
   const date = new Date().toLocaleString("fa-IR");
 
   try {
-    const priceData = await fetch(price, { cache: "no-store" }).then(
-      (response) => response.json()
-    );
-    const cryptoData = await fetch(crypto, { cache: "no-store" }).then(
-      (response) => response.json()
-    );
-    const carData = await fetch(car, { cache: "no-store" }).then((response) =>
-      response.json()
-    );
-    const mobileData = await fetch(mobile, { cache: "no-store" }).then(
-      (response) => response.json()
+    const responses = await Promise.all(
+      Object.entries(urls).map(([key, url]) =>
+        fetch(url, { cache: "no-store" }).then((response) => response.json())
+      )
     );
 
-    const kvPrice = await kv.set("price", { ...priceData, date });
-    const kvCypto = await kv.set("crypto", { ...cryptoData, date });
-    const kvCar = await kv.set("car", { ...carData, date });
-    const kvMoblie = await kv.set("mobile", { ...mobileData, date });
+    const results = {};
+    for (let i = 0; i < responses.length; i++) {
+      const key = Object.keys(urls)[i];
+      results[key] = await kv.set(key, { ...responses[i], date });
+    }
 
-    return new Response(JSON.stringify({ kvPrice, kvCypto, kvCar, kvMoblie }));
+    return new Response(JSON.stringify(results));
   } catch (error) {
     return new Response(
       JSON.stringify({
